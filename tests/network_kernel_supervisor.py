@@ -17,7 +17,10 @@ def main():
     receipt = install_policy(manifest)
     results = Path("/results")
     results.mkdir(exist_ok=True)
-    os.chown(results, 10001, 10001)
+    # The supervisor has no DAC_OVERRIDE capability. Keep it as the owner so
+    # capture can write, and grant the worker access through its primary group.
+    os.chown(results, 0, 10001)
+    os.chmod(results, 0o770)
     capture = results / "kernel-capture"
     previous_session = capture_session(capture)
     observer = subprocess.Popen([sys.executable, "-m", "mitigata", "capture", "--output", str(capture)])
@@ -50,7 +53,6 @@ def main():
     assert observed > 0 and not violations
     assert "0 packets dropped by kernel" in (session / "tcpdump.log").read_text()
     # Exercise the shipping supervisor too, including capture finalization and automatic import.
-    os.chown(results, 0, 0)
     completed = supervise(Path("/scope/fixture.yaml"), results / "shipping-run", results / "shipping-capture")
     assert completed == 0
     read_report = "from pathlib import Path;p=next(Path('/results/shipping-run/reports').glob('*/report.json'));print(p.read_text())"
