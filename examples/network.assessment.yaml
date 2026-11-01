@@ -1,0 +1,46 @@
+# Template only. Copy into engagements/ before adding private target details.
+# The address is illustrative; set your own scope and authorization, then
+# set enabled: true and authorized: true after reviewing the allowed actions.
+name: Private-network assessment template
+mode: AUTHORIZED_ASSESSMENT
+execution_profile: native_guarded
+enabled: false
+authorized: false
+authorization_reference: ''
+addresses:
+- 192.168.56.10/32
+priority_addresses: []
+port_ranges: []
+ports:
+- 80
+- 443
+- 8080
+excluded_addresses: []
+excluded_ports: []
+seed_urls: []
+baseline_urls: []
+allowed_paths:
+- /
+excluded_paths: []
+allowed_actions:
+- http_get
+- redis_info
+permitted_checks:
+- web.directory_listing
+- web.credential_literal
+- web.verbose_error
+- network.redis_unauthenticated_info
+- binary.embedded_credential
+- binary.missing_pie
+allow_credential_use: false
+artifacts: []
+budgets:
+  seconds: 1050
+  requests: 20000
+  rate_per_second: 40
+  workers: 32
+  connect_timeout: 0.5
+  timeout: 2
+  max_pages: 150
+  queue_window: 128
+  max_auth_attempts: 0

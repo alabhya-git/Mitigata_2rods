@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>mitigata // engine console</title>
+<link rel="stylesheet" href="/static/style.css">
+<script src="/static/app.js" defer></script>
+</head>
+<body>
+<header id="cmdbar">
+  <span class="logo">MITIGATA<b>//</b>ENGINE</span>
+  <form id="start-form" class="start" hidden>
+    <span class="prompt">target&gt;</span>
+    <input id="target-ip" placeholder="192.168.56.10" autocomplete="off" spellcheck="false" inputmode="numeric">
+    <button id="start-btn" class="btn go" type="submit">start</button>
+  </form>
+  <button id="demo-btn" class="btn" hidden>+ new run</button>
+  <div class="cmd-right">
+    <label class="sr-only" for="run-select">run</label>
+    <select id="run-select"><option value="">— no run —</option></select>
+    <button id="cancel" class="btn ghost" disabled>stop</button>
+    <button id="download" class="btn ghost" disabled>bundle</button>
+    <span id="connection-label" class="conn">connecting</span>
+  </div>
+</header>
+
+<div id="connect-panel" class="connect" hidden>
+  <span class="prompt">token&gt;</span>
+  <form id="connect-form"><label class="sr-only" for="token">operator token</label><input id="token" type="password" autocomplete="off" placeholder="operator token"><button class="btn go" type="submit">auth</button></form>
+</div>
+<div id="error" class="err" role="alert" hidden></div>
+
+<section id="statusline" class="strip">
+  <span><span class="k">run</span> <b id="run-name">—</b> <span id="run-status" class="tag">idle</span></span>
+  <span><span class="k">elapsed</span> <b id="elapsed-count">—</b></span>
+  <span><span class="k">scope</span> <b id="scope-label">loopback</b></span>
+  <span><span class="k">ai</span> <b id="ai-budget">—</b></span>
+</section>
+
+<section class="strip">
+  <span class="k">agents</span>
+  <div id="agent-bars" class="bars"></div>
+  <span id="task-summary" class="k right">—</span>
+</section>
+
+<section id="metrics-strip" class="strip"><span class="k">state</span><div id="metrics" class="cells"></div></section>
+<section id="scope-strip" class="strip"><span class="k">guard</span><div id="scope-cells" class="cells"></div></section>
+
+<nav id="tabs" class="tabs">
+  <button class="tab selected" data-view="overview">F1 · overview</button>
+  <button class="tab" data-view="findings">F2 · findings</button>
+  <button class="tab" data-view="graph">F3 · access path</button>
+  <button class="tab" data-view="activity">F4 · live log</button>
+  <button class="tab" data-view="report">F5 · report</button>
+</nav>
+
+<main>
+  <div id="overview-view" class="view active">
+    <div class="cols">
+      <section class="box scroll"><h2>findings</h2><div id="ov-findings" class="rows"><p class="empty">no findings yet</p></div></section>
+      <section class="box scroll"><h2>event log <span id="ov-log-count" class="k"></span></h2><div id="ov-log" class="rows log"><p class="empty">waiting for activity</p></div></section>
+    </div>
+    <div class="cols">
+      <section class="box"><h2>handoffs</h2><div id="handoffs" class="rows"><p class="empty">shared findings appear here</p></div></section>
+      <section class="box"><h2>run integrity</h2><dl id="integrity" class="kv"></dl></section>
+    </div>
+    <section class="box"><h2>investigation</h2><p id="case-summary" class="sub">no investigation cases yet.</p><div id="case-outcomes" class="rows"></div><div id="captured-codes" class="rows"></div><button id="export-codes" class="btn ghost" disabled>export captured codes</button><div id="surface-inventory" class="rows"></div><div id="capabilities" class="rows"></div></section>
+    <section class="box"><h2>ptes phases</h2><div id="phases" class="phases"></div><p id="scope-progress" class="graph-note"></p></section>
+  </div>
+
+  <div id="findings-view" class="view">
+    <section class="box"><h2>findings ledger <label>filter <select id="finding-filter"><option value="all">all</option><option value="confirmed">confirmed</option><option value="rejected">rejected</option><option value="inconclusive">inconclusive</option></select></label></h2><div id="findings-body" class="rows big"></div><p id="findings-empty" class="empty">no findings to display.</p></section>
+  </div>
+
+  <div id="graph-view" class="view">
+    <section class="box"><h2>verified access path</h2><div id="graph"><p class="empty">an evidence path appears as prerequisites are established.</p></div><p class="graph-note">dashed = prerequisite relationship · solid = verified authorized transition. no network pivots or multiple hops are claimed.</p></section>
+  </div>
+
+  <div id="activity-view" class="view">
+    <section class="box scroll"><h2>engagement activity <span id="event-count" class="k"></span></h2><div id="activity" class="rows log"><p class="empty">no activity yet.</p></div></section>
+  </div>
+
+  <div id="report-view" class="view">
+    <section class="box report-head">
+      <h2>report</h2>
+      <div class="rpt-top">
+        <div class="rpt-id"><b id="rpt-name">—</b> <span id="rpt-status" class="tag"></span> <span class="k" id="rpt-meta"></span></div>
+        <div class="rpt-dl">
+          <button id="dl-html" class="btn big">⧉ open full report</button>
+          <button id="dl-json" class="btn big">↓ report.json</button>
+          <button id="dl-bundle" class="btn big go">↓ evidence bundle (.zip)</button>
+        </div>
+      </div>
+    </section>
+    <div class="cols">
+      <section class="box"><h2>PRD coverage — requirements &amp; bonuses</h2><div id="coverage" class="cov"></div></section>
+      <section class="box"><h2>summary</h2><div id="rpt-summary" class="rows"></div></section>
+    </div>
+    <section class="box"><h2>PTES phase mapping</h2><div id="ptes-map" class="ptes"></div></section>
+  </div>
+</main>
+
+<footer><span>MITIGATA ENGINE <b>/ v0.3</b></span><span>evidence over assertion</span></footer>
+
+<dialog id="evidence-dialog"><div class="dialog-heading"><h2 id="dialog-title">evidence</h2><button id="close-dialog" class="btn ghost" aria-label="close">close</button></div><div id="dialog-content"></div></dialog>
+</body>
+</html>

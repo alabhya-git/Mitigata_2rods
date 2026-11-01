@@ -1,0 +1,11 @@
+version: 1
+recipes:
+  - id: web.openapi_document
+    surface: web
+    primitive: json_document
+    path_prefix: /api
+    required_keys: [openapi, paths]
+    title: OpenAPI document is publicly retrievable
+    claim: The response contains an OpenAPI document with a paths inventory; restricted data access is not established.
+    severity: info
+    remediation: Review whether API documentation is intended to be public and restrict it when required.

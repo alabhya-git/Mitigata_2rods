@@ -1,0 +1,49 @@
+services:
+  allowed:
+    image: mitigata-tests:local
+    entrypoint: [python, /app/tests/network_fixture.py, --label, allowed]
+    volumes: [./runtime/external-network-proof/audit:/audit]
+    networks:
+      fixture:
+        ipv4_address: 172.31.248.10
+    user: root
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health',timeout=1)"]
+      interval: 2s
+      timeout: 2s
+      retries: 15
+  outside:
+    image: mitigata-tests:local
+    entrypoint: [python, /app/tests/network_fixture.py, --label, outside]
+    volumes: [./runtime/external-network-proof/audit:/audit]
+    networks:
+      fixture:
+        ipv4_address: 172.31.248.11
+    user: root
+    healthcheck:
+      disable: true
+  verify:
+    image: mitigata-tests:local
+    entrypoint: [python, /app/tests/network_kernel_supervisor.py]
+    user: root
+    cap_drop: [ALL]
+    cap_add: [NET_ADMIN, NET_RAW, SETUID, SETGID, CHOWN, KILL]
+    security_opt: [no-new-privileges:true]
+    read_only: true
+    tmpfs: [/tmp, /run/mitigata]
+    volumes:
+      - ./tests/network.scope.yaml:/scope/fixture.yaml:ro
+      - ./runtime/external-network-proof/results:/results
+    networks: [fixture]
+    depends_on:
+      allowed:
+        condition: service_healthy
+      outside:
+        condition: service_started
+    healthcheck:
+      disable: true
+networks:
+  fixture:
+    internal: true
+    ipam:
+      config: [{subnet: 172.31.248.0/24}]

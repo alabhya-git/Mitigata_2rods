@@ -1,0 +1,18 @@
+id: mitigata-reviewed-git-head
+info:
+  name: Git HEAD metadata candidate
+  author: mitigata
+  severity: info
+  description: Candidate only; the engine independently repeats and compares the response.
+http:
+  - method: GET
+    path:
+      - "{{BaseURL}}/.git/HEAD"
+    redirects: false
+    matchers-condition: and
+    matchers:
+      - type: status
+        status: [200]
+      - type: regex
+        part: body
+        regex: ["^ref: refs/heads/[A-Za-z0-9_./-]+"]

@@ -1,0 +1,65 @@
+services:
+  ai-gateway:
+    image: mitigata-engine:local
+    build: .
+    command: [ai-gateway, --port, "8090"]
+    environment:
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-PASTE_YOUR_CLAUDE_API_KEY_HERE}
+      MITIGATA_AI_GATEWAY_TOKEN: ${MITIGATA_AI_GATEWAY_TOKEN:?Use --env-file .env.local}
+    networks:
+      assessment:
+        ipv4_address: 172.30.251.2
+      model-access: {}
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    read_only: true
+    tmpfs: [/tmp]
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request,json; d=json.load(urllib.request.urlopen('http://127.0.0.1:8090/health')); assert d['claude_key_configured']"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+  engine:
+    image: mitigata-engine:local
+    build: .
+    user: root
+    command: [confined-run, /scope/engagement.yaml, --output, /data, --capture, /capture, --dashboard, --port, "8765"]
+    environment:
+      MITIGATA_AI_GATEWAY_TOKEN: ${MITIGATA_AI_GATEWAY_TOKEN:?Use --env-file .env.local}
+    volumes:
+      - ${MITIGATA_SCOPE_FILE:-./engagements/ai.confined.yaml}:/scope/engagement.yaml:ro
+      - ./runtime/ai-linux:/data
+      - ./runtime/ai-linux-capture:/capture
+    networks:
+      assessment:
+        ipv4_address: 172.30.251.3
+    cap_drop: [ALL]
+    cap_add: [NET_ADMIN, NET_RAW, SETUID, SETGID, CHOWN, KILL]
+    security_opt: [no-new-privileges:true]
+    read_only: true
+    tmpfs: [/tmp, /run/mitigata]
+    shm_size: 256m
+    depends_on:
+      ai-gateway:
+        condition: service_healthy
+    stop_grace_period: 45s
+  gateway:
+    image: nginxinc/nginx-unprivileged:alpine@sha256:b5047b9b76845eac124358373c6852377c52e4b05834a47647e955dd91cb8f1e
+    ports: [127.0.0.1:8768:8080]
+    volumes: [./deployment/nginx.conf:/etc/nginx/nginx.conf:ro]
+    networks:
+      assessment:
+        ipv4_address: 172.30.251.4
+      model-access: {}
+    depends_on:
+      engine:
+        condition: service_healthy
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    read_only: true
+    tmpfs: [/tmp]
+networks:
+  assessment:
+    ipam:
+      config: [{subnet: 172.30.251.0/24}]
+  model-access: {}

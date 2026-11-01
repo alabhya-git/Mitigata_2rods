@@ -1,0 +1,47 @@
+services:
+  engine:
+    build: .
+    image: mitigata-engine:local
+    volumes:
+      - ./runtime/container:/data
+      - ./runtime/capture:/capture:ro
+    networks: [assessment]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    read_only: true
+    tmpfs: [/tmp]
+    stop_grace_period: 15s
+  gateway:
+    image: nginxinc/nginx-unprivileged:alpine@sha256:b5047b9b76845eac124358373c6852377c52e4b05834a47647e955dd91cb8f1e
+    depends_on:
+      engine:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:8766:8080"
+    volumes:
+      - ./deployment/nginx.conf:/etc/nginx/nginx.conf:ro
+    networks: [control, assessment]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    read_only: true
+    tmpfs: [/tmp]
+  observer:
+    image: mitigata-engine:local
+    depends_on:
+      engine:
+        condition: service_healthy
+    network_mode: service:engine
+    user: root
+    entrypoint: ["python", "-m", "mitigata", "capture", "--output", "/capture"]
+    volumes:
+      - ./runtime/capture:/capture
+    cap_drop: [ALL]
+    cap_add: [NET_RAW]
+    security_opt: [no-new-privileges:true]
+    read_only: true
+    tmpfs: [/tmp]
+    stop_grace_period: 15s
+networks:
+  control: {}
+  assessment:
+    internal: true

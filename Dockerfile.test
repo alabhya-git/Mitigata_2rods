@@ -1,0 +1,12 @@
+FROM python:3.13-slim@sha256:2d44738ebf4ce5f63b9d9ea871e9c7cfdc0426f7b0c97cac915fd88ded1d86bb AS test-dependencies
+COPY requirements-dev.lock /tmp/requirements-dev.lock
+RUN --mount=type=cache,target=/root/.cache/pip pip install --prefix=/testdeps -r /tmp/requirements-dev.lock
+FROM mitigata-engine:local
+USER root
+COPY --from=test-dependencies /testdeps /usr/local
+COPY tests /app/tests
+COPY examples /app/examples
+COPY pyproject.toml /app/pyproject.toml
+USER mitigata
+ENTRYPOINT ["python", "-m", "pytest"]
+CMD ["-q", "/app/tests"]

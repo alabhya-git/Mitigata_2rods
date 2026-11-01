@@ -1,0 +1,63 @@
+services:
+  allowed:
+    image: mitigata-tests:local
+    entrypoint: [python, /app/tests/investigation_fixture.py]
+    volumes: [./runtime/investigation-proof/audit:/audit]
+    networks:
+      fixture:
+        ipv4_address: 172.31.248.10
+    user: root
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health',timeout=1)"]
+      interval: 2s
+      timeout: 2s
+      retries: 15
+  outside:
+    image: mitigata-tests:local
+    entrypoint: [python, /app/tests/network_fixture.py, --label, outside]
+    volumes: [./runtime/investigation-proof/audit:/audit]
+    networks:
+      fixture:
+        ipv4_address: 172.31.248.11
+    user: root
+    healthcheck:
+      disable: true
+  controller:
+    image: mitigata-tests:local
+    entrypoint: [python, /app/tests/investigation_fixture.py, --controller]
+    volumes: [./runtime/investigation-proof/audit:/audit]
+    networks:
+      fixture:
+        ipv4_address: 172.31.248.12
+    user: root
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8090/health',timeout=1)"]
+      interval: 2s
+      timeout: 2s
+      retries: 15
+  verify:
+    image: mitigata-tests:local
+    entrypoint: [python, /app/tests/investigation_supervisor.py]
+    user: root
+    environment:
+      MITIGATA_AI_GATEWAY_TOKEN: owned-protocol-fixture-token-123456789
+    cap_drop: [ALL]
+    cap_add: [NET_ADMIN, NET_RAW, SETUID, SETGID, CHOWN, KILL]
+    security_opt: [no-new-privileges:true]
+    read_only: true
+    tmpfs: [/tmp, /run/mitigata]
+    shm_size: 256m
+    volumes:
+      - ./tests/investigation.scope.yaml:/scope/fixture.yaml:ro
+      - ./runtime/investigation-proof/results:/results
+    networks: [fixture]
+    depends_on:
+      allowed: {condition: service_healthy}
+      controller: {condition: service_healthy}
+      outside: {condition: service_started}
+    healthcheck: {disable: true}
+networks:
+  fixture:
+    internal: true
+    ipam:
+      config: [{subnet: 172.31.248.0/24}]

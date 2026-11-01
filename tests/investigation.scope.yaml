@@ -1,0 +1,63 @@
+name: Owned tools and Claude-protocol integration fixture
+mode: AUTHORIZED_ASSESSMENT
+execution_profile: linux_confined
+authorized: true
+authorization_reference: Isolated team-owned integration network; no organizer targets
+addresses:
+- 172.31.248.10/32
+ports:
+- 8000
+- 8001
+seed_urls:
+- http://172.31.248.10:8000/
+permitted_checks:
+- web.git_metadata
+- web.structured_secret
+- web.reflected_xss
+allowed_actions:
+- http_get
+- service_identification
+- input_reflection
+allow_credential_use: false
+discovery:
+  batched: true
+  backend: nmap
+  batch_size: 8
+  concurrency: 16
+investigation:
+  enabled: true
+  allow_partial_responses: true
+  decode_compression: true
+  follow_same_ip_hostnames: true
+  discover_artifacts: true
+  browser: true
+  max_path_probes: 3
+  paths:
+  - .git/HEAD
+  - config.json
+  - absent
+ai:
+  enabled: true
+  required: true
+  gateway_address: 172.31.248.12
+  gateway_port: 8090
+  budget_usd: 0.5
+  max_calls: 16
+  max_rounds_per_case: 2
+tools:
+  nmap: true
+  katana: true
+  ffuf: true
+  nuclei: true
+  binary_tools: true
+  proxy_port: 11080
+  timeout: 40
+budgets:
+  seconds: 180
+  requests: 400
+  rate_per_second: 40
+  timeout: 2
+  connect_timeout: 0.4
+  workers: 8
+  queue_window: 2
+  max_pages: 100

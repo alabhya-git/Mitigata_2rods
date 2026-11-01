@@ -1,0 +1,133 @@
+# Template only. Copy into engagements/ before adding private target details.
+# The address is illustrative; set your own scope and authorization, then
+# set enabled: true and authorized: true after reviewing the allowed actions.
+name: Confined AI-assisted assessment template
+mode: AUTHORIZED_ASSESSMENT
+execution_profile: linux_confined
+authorized: false
+authorization_reference: ''
+addresses:
+- 192.168.56.10/32
+ports:
+- 80
+- 443
+- 8080
+port_ranges: []
+excluded_addresses: []
+excluded_ports: []
+include_network_broadcast: false
+priority_addresses: []
+priority_ports:
+- 80
+- 1111
+- 443
+- 8000
+- 8080
+- 8443
+- 22
+- 21
+- 25
+- 53
+- 110
+- 139
+- 143
+- 445
+- 465
+- 587
+- 993
+- 995
+- 1433
+- 1521
+- 3000
+- 3306
+- 3389
+- 5000
+- 5432
+- 5900
+- 6379
+- 8008
+- 8081
+- 8888
+- 9000
+- 9090
+- 9200
+- 27017
+hostnames: {}
+seed_urls: []
+baseline_urls: []
+allowed_paths:
+- /
+excluded_paths: []
+permitted_checks:
+- web.directory_listing
+- web.credential_literal
+- web.verbose_error
+- web.embedded_credential_accepted
+- binary.embedded_credential
+- binary.missing_pie
+- network.redis_unauthenticated_info
+- web.reflected_xss
+- web.artifact_form_session
+- web.git_metadata
+- web.structured_secret
+allow_credential_use: true
+allowed_actions:
+- http_get
+- redis_info
+- credential_validation
+- session_authentication
+- input_reflection
+- service_identification
+- challenge_interaction
+artifacts: []
+artifact_root: null
+budgets:
+  seconds: 1100
+  requests: 100000
+  rate_per_second: 100
+  workers: 12
+  timeout: 8
+  max_body_bytes: 2097152
+  max_artifact_bytes: 4194304
+  max_pages: 250
+  max_depth: 5
+  max_briefing_bytes: 8192
+  max_auth_attempts: 6
+  connect_timeout: 0.75
+  queue_window: 2
+enabled: false
+discovery:
+  batched: true
+  batch_size: 2048
+  concurrency: 96
+  backend: auto
+investigation:
+  enabled: true
+  allow_partial_responses: true
+  decode_compression: true
+  allow_unverified_tls: true
+  follow_same_ip_hostnames: true
+  discover_artifacts: true
+  max_artifacts: 12
+  max_path_probes: 70
+  max_cases: 12
+  browser: true
+  flag_patterns: []
+ai:
+  enabled: true
+  required: true
+  model: claude-sonnet-5-5
+  budget_usd: 1.0
+  max_calls: 24
+  max_rounds_per_case: 4
+  max_output_tokens: 1000
+  max_context_bytes: 24000
+  gateway_address: 172.30.251.2
+tools:
+  binary_tools: true
+  nmap: true
+  katana: true
+  ffuf: true
+  nuclei: true
+  proxy_port: 11080
+control_port: 8765

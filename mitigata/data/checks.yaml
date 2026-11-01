@@ -1,0 +1,157 @@
+version: 1
+recipes:
+  - id: web.directory_listing
+    surface: web
+    primitive: directory_listing
+    title: Browsable directory index
+    claim: The server publishes a navigable directory index at this URL.
+    severity: low
+    remediation: Disable directory indexing and serve only intended public files.
+  - id: web.credential_literal
+    surface: web
+    primitive: credential_literal
+    title: Public response contains credential material
+    claim: An unauthenticated response contains a non-placeholder credential assignment; usability is a separate claim.
+    severity: medium
+    remediation: Remove credential-bearing files from public routes and rotate exposed credentials.
+  - id: web.verbose_error
+    surface: web
+    primitive: verbose_error
+    title: Stack trace exposed in response
+    claim: A remotely accessible response contains a recognizable application stack trace.
+    severity: low
+    remediation: Disable production debug responses and return a generic error with a private correlation ID.
+  - id: web.embedded_credential_accepted
+    surface: web
+    primitive: basic_auth
+    title: Credential recovered from supplied artifact is accepted
+    claim: An artifact-derived credential is accepted at a challenged HTTP Basic authentication boundary.
+    severity: high
+    remediation: Rotate the embedded credential and replace static shared secrets with scoped short-lived credentials.
+  - id: binary.embedded_credential
+    surface: binary
+    primitive: binary_credential
+    title: Credential material embedded in artifact
+    claim: Printable service-bound username and password material is present at reproducible artifact offsets.
+    severity: medium
+    remediation: Remove embedded credentials and load secrets from an access-controlled runtime provider.
+  - id: binary.missing_pie
+    surface: binary
+    primitive: elf_pie
+    title: ELF executable does not use PIE
+    claim: The ELF file type is EXEC rather than a position-independent executable; this alone does not prove exploitability.
+    severity: low
+    remediation: Build supported executables with position-independent executable hardening and verify the resulting ELF metadata.
+  - id: network.redis_unauthenticated_info
+    surface: network
+    primitive: redis_info
+    title: Redis information available without authentication
+    claim: The service returns Redis server information without any authentication exchange.
+    severity: medium
+    remediation: Require authentication or ACLs and restrict network access to intended clients.
+  - id: web.reflected_xss
+    surface: web
+    primitive: browser_xss
+    title: Reflected input executes a controlled browser script
+    claim: A supplied GET parameter executes a fixed inert marker in the confined browser; the benign input control does not execute it.
+    severity: medium
+    remediation: Apply context-aware output encoding and validate untrusted input; use a restrictive Content Security Policy as defense in depth.
+  - id: web.artifact_form_session
+    surface: web
+    primitive: form_auth
+    title: Artifact credential unlocks a protected HTTP session
+    claim: An artifact-derived credential obtains a session that retrieves a resource unavailable to anonymous and invalid-session controls.
+    severity: high
+    remediation: Rotate embedded credentials, remove them from distributed artifacts, and use scoped short-lived authentication.
+  - id: web.git_metadata
+    surface: web
+    primitive: git_head
+    title: Git HEAD metadata publicly retrievable
+    claim: An unauthenticated response exposes a Git HEAD reference; complete repository access is not established.
+    severity: low
+    remediation: Block access to version-control metadata and deploy only intended application files.
+  - id: web.structured_secret
+    surface: web
+    primitive: structured_secret
+    title: Structured response contains credential material
+    claim: An unauthenticated JSON response contains a non-placeholder secret assignment; credential usability is a separate claim.
+    severity: medium
+    remediation: Remove secrets from public configuration or API responses and rotate the exposed values.
+  - id: web.default_credentials
+    surface: web
+    primitive: default_credentials
+    title: Default credentials accepted at an authentication boundary
+    claim: A well-known default credential is accepted where anonymous access and an incorrect credential are both rejected.
+    severity: high
+    remediation: Remove default accounts, require unique strong credentials on first use, and add lockout and monitoring.
+  - id: web.path_traversal
+    surface: web
+    primitive: path_traversal
+    title: Path traversal exposes an out-of-webroot file
+    claim: A traversal payload in a request parameter returns a recognizable system file signature that a benign control value does not.
+    severity: high
+    remediation: Reject path separators and traversal sequences, resolve and confine paths to an allowlisted base directory.
+  - id: web.sql_injection
+    surface: web
+    primitive: sql_injection
+    title: SQL injection indicated by a database error
+    claim: A single-quote payload elicits a database engine error signature that a balanced-quote control value does not.
+    severity: high
+    remediation: Use parameterized queries or prepared statements and never build SQL from untrusted input.
+  - id: web.ssti
+    surface: web
+    primitive: ssti
+    title: Server-side template injection evaluates an expression
+    claim: A template expression in a parameter is evaluated to its arithmetic product, which the literal control is not.
+    severity: high
+    remediation: Do not render untrusted input as a template; use a sandboxed, logic-less template context.
+  - id: web.open_redirect
+    surface: web
+    primitive: open_redirect
+    title: Open redirect to an externally controllable destination
+    claim: A redirect parameter sends the client to a supplied in-scope marker location that a benign control value does not.
+    severity: low
+    remediation: Allowlist redirect destinations or use indirect redirect tokens instead of a raw destination parameter.
+  - id: network.elasticsearch_unauthenticated
+    surface: network
+    primitive: http_service_unauth
+    title: Elasticsearch/CouchDB cluster reachable without authentication
+    claim: A datastore management endpoint returns its characteristic status document without any authentication exchange.
+    severity: medium
+    remediation: Require authentication, bind the service to a private interface, and restrict network access to intended clients.
+    required_keys: []
+  - id: web.forwarding_header_bypass
+    surface: web
+    primitive: header_access_bypass
+    title: Access control bypassed via a trusted forwarding header
+    claim: A spoofable client-identity header (e.g. X-Forwarded-For) returns content that both the unspoofed request and a public-address control do not, indicating trust of a forgeable header.
+    severity: high
+    remediation: Do not make authorization decisions from client-supplied forwarding headers; enforce source identity at the network layer or on an authenticated session.
+  - id: binary.obfuscated_credential
+    surface: binary
+    primitive: xor_encoded_credential
+    title: Obfuscated secret recoverable from artifact
+    claim: A reversible transform over embedded bytes, keyed by an in-artifact literal, deterministically yields a printable secret at a reproducible offset; recoverability, not usability, is claimed.
+    severity: medium
+    remediation: Do not embed secrets in distributed artifacts, even obfuscated; load secrets from an access-controlled runtime provider and rotate exposed values.
+  - id: web.sensitive_document
+    surface: web
+    primitive: sensitive_disclosure
+    title: Sensitive operational document publicly retrievable
+    claim: An unauthenticated resource returns operational, infrastructure or credential-bearing text that a nonexistent-path control does not; a specific onward exploit is a separate claim.
+    severity: medium
+    remediation: Remove internal operational documents from public routes and serve only intended public files.
+  - id: network.protocol_resource_capture
+    surface: network
+    primitive: protocol_capture
+    title: Protected resource retrieved over a reviewed text protocol
+    claim: Following a service's own documented command protocol, with an artifact-recovered passkey and a checksum learned from the service's worked example, returns a protected resource unavailable before authentication.
+    severity: high
+    remediation: Do not gate secrets behind client-computable checksums or secrets embedded in distributed artifacts; require server-side authorization and rotate exposed passkeys.
+observations:
+  - id: web.missing_security_headers
+    claim: Selected defense-in-depth response headers are absent. No application exploit is established.
+  - id: web.input_reflection
+    claim: A harmless supplied canary is reflected. Script execution is not established.
+  - id: binary.unsafe_import
+    claim: An unsafe-function import exists. Reachability and exploitable memory corruption are not established.

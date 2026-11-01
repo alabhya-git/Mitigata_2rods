@@ -1,0 +1,21 @@
+services:
+  assessment-runner:
+    build: .
+    image: mitigata-engine:local
+    user: root
+    command: [confined-run, /scope/engagement.yaml, --output, /data, --capture, /capture]
+    volumes:
+      - ${MITIGATA_SCOPE_FILE:-./engagements/confined.yaml}:/scope/engagement.yaml:ro
+      - ./runtime/assessment-contained:/data
+      - ./runtime/assessment-capture:/capture
+    cap_drop: [ALL]
+    cap_add: [NET_ADMIN, NET_RAW, SETUID, SETGID, CHOWN, KILL]
+    security_opt: [no-new-privileges:true]
+    read_only: true
+    tmpfs: [/tmp, /run/mitigata]
+    healthcheck:
+      disable: true
+    networks: [authorized-egress]
+    stop_grace_period: 45s
+networks:
+  authorized-egress: {}

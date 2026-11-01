@@ -1,0 +1,28 @@
+name: Engine checks
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ['3.12', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - run: python -m pip install -r requirements-dev.lock
+      - run: python -m pip install --no-deps -e .
+      - run: python -m pytest -q
+      - run: python -m ruff check mitigata tests
+  network-confinement:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t mitigata-engine:local .
+      - run: docker build -f Dockerfile.test -t mitigata-tests:local .
+      - run: docker compose -p mitigata-nettest -f compose.external-test.yaml run --rm verify
+      - if: always()
+        run: docker compose -p mitigata-nettest -f compose.external-test.yaml down

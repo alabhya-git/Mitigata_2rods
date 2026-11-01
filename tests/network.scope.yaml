@@ -1,0 +1,18 @@
+name: Owned non-loopback kernel fixture
+mode: AUTHORIZED_ASSESSMENT
+execution_profile: linux_confined
+authorized: true
+authorization_reference: Isolated team-owned Docker integration fixtures
+addresses: [172.31.248.10/32]
+ports: [8000, 8001]
+priority_ports: [8000]
+allowed_actions: [http_get]
+permitted_checks: [web.credential_literal]
+allow_credential_use: false
+budgets:
+  requests: 80
+  seconds: 90
+  rate_per_second: 30
+  timeout: 1
+  connect_timeout: 0.4
+  workers: 4
